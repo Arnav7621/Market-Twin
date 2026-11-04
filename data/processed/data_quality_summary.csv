@@ -1,0 +1,13 @@
+Ticker,Raw_Rows,Processed_Rows,Missing_Values,Duplicate_Dates,Output_File
+AAPL,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\AAPL.csv
+MSFT,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\MSFT.csv
+GOOGL,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\GOOGL.csv
+AMZN,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\AMZN.csv
+NVDA,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\NVDA.csv
+META,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\META.csv
+JPM,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\JPM.csv
+GS,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\GS.csv
+BLK,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\BLK.csv
+SPY,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\SPY.csv
+QQQ,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\QQQ.csv
+IWM,1508,1508,3,0,C:\Users\Arnav\OneDrive\Desktop\Market-Twin\data\processed\IWM.csv
