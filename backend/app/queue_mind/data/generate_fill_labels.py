@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 
 
-PROJECT_DIR = Path(__file__).resolve().parents[5]
+PROJECT_DIR = Path(__file__).resolve().parents[4]
 
 OUTPUT_DIR = PROJECT_DIR / "data" / "processed" / "queue_mind"
 
