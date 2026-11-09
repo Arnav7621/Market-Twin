@@ -1,1 +1,1 @@
-mul(mul(X2, X0), X0)
+mul(sub(mul(X1, X0), sub(X0, X2)), mul(sub(X0, X2), sub(X0, sub(sub(sub(mul(X1, X0), X0), X0), X0))))

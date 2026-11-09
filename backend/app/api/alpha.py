@@ -1,19 +1,12 @@
 
 from pathlib import Path
 
-import json
+import numpy as np
 import pandas as pd
 
 from fastapi import APIRouter, HTTPException
-
 from pydantic import BaseModel, Field
 
-from app.alpha_compiler.discover_factors import discover
-
-
-# =========================================
-# ROUTER CONFIGURATION
-# =========================================
 
 router = APIRouter(
     prefix="/api/alpha",
@@ -28,10 +21,10 @@ router = APIRouter(
 PROJECT_DIR = Path(__file__).resolve().parents[3]
 
 ALPHA_COMPILER_DIR = (
-    PROJECT_DIR /
-    "data" /
-    "processed" /
-    "alpha_compiler"
+    PROJECT_DIR
+    / "data"
+    / "processed"
+    / "alpha_compiler"
 )
 
 
@@ -59,50 +52,40 @@ class AlphaRequest(BaseModel):
 
 
 # =========================================
-# ALPHACOMPILER DISCOVERY API
+# ALPHACOMPILER API
 # =========================================
 
 @router.post("/discover")
-def discover_alpha(
-    request: AlphaRequest
-):
+def discover_alpha(request: AlphaRequest):
 
     ticker = request.ticker.upper().strip()
 
     if not ticker:
-
         raise HTTPException(
             status_code=400,
             detail="Ticker cannot be empty"
         )
 
-    # -------------------------------------
-    # STEP 1: VERIFY PROCESSED MARKET DATA
-    # -------------------------------------
-
     market_data_path = (
-        PROJECT_DIR /
-        "data" /
-        "processed" /
-        f"{ticker}.csv"
+        PROJECT_DIR
+        / "data"
+        / "processed"
+        / f"{ticker}.csv"
     )
 
     if not market_data_path.exists():
-
         raise HTTPException(
             status_code=404,
             detail=f"Processed market data not found for {ticker}"
         )
 
-    # -------------------------------------
-    # STEP 2: RUN ACTUAL ALPHACOMPILER
-    # -------------------------------------
-
     try:
 
-        discover(
-            ticker=ticker
-        )
+        # Import actual AlphaCompiler discovery function
+        from app.alpha_compiler.discover_factors import discover
+
+        # Run actual factor discovery
+        discover(ticker=ticker)
 
     except FileNotFoundError as exc:
 
@@ -122,59 +105,40 @@ def discover_alpha(
 
         raise HTTPException(
             status_code=500,
-            detail=f"AlphaCompiler discovery failed: {str(exc)}"
+            detail=f"AlphaCompiler failed: {str(exc)}"
         )
 
-    # -------------------------------------
-    # STEP 3: LOCATE GENERATED OUTPUT FILES
-    # -------------------------------------
+    # =====================================
+    # LOAD GENERATED FILES
+    # =====================================
 
     best_factor_path = (
-        ALPHA_COMPILER_DIR /
-        f"{ticker}_best_factor.txt"
+        ALPHA_COMPILER_DIR
+        / f"{ticker}_best_factor.txt"
     )
 
     predictions_path = (
-        ALPHA_COMPILER_DIR /
-        f"{ticker}_factor_predictions.csv"
+        ALPHA_COMPILER_DIR
+        / f"{ticker}_factor_predictions.csv"
     )
 
     if not best_factor_path.exists():
-
         raise HTTPException(
             status_code=500,
-            detail="AlphaCompiler completed but best factor file was not generated"
+            detail="Best factor file was not generated"
         )
 
     if not predictions_path.exists():
-
         raise HTTPException(
             status_code=500,
-            detail="AlphaCompiler completed but predictions file was not generated"
+            detail="Factor predictions CSV was not generated"
         )
-
-    # -------------------------------------
-    # STEP 4: READ BEST FACTOR
-    # -------------------------------------
 
     try:
 
         best_factor = best_factor_path.read_text(
             encoding="utf-8"
         ).strip()
-
-    except Exception as exc:
-
-        raise HTTPException(
-            status_code=500,
-            detail=f"Unable to read best factor: {str(exc)}"
-        )
-
-    # -------------------------------------
-    # STEP 5: READ PREDICTIONS
-    # -------------------------------------
-
-    try:
 
         predictions_df = pd.read_csv(
             predictions_path
@@ -184,21 +148,96 @@ def discover_alpha(
 
         raise HTTPException(
             status_code=500,
-            detail=f"Unable to read factor predictions: {str(exc)}"
+            detail=f"Unable to read AlphaCompiler outputs: {str(exc)}"
         )
 
-    # Convert predictions to JSON-safe records.
-    # NaN values are converted to JSON null.
+    # =====================================
+    # VALIDATE PREDICTION COLUMNS
+    # =====================================
 
-    predictions_json = json.loads(
-        predictions_df.to_json(
-            orient="records"
+    required_columns = [
+        "Actual_Return",
+        "Predicted_Return"
+    ]
+
+    for column in required_columns:
+
+        if column not in predictions_df.columns:
+
+            raise HTTPException(
+                status_code=500,
+                detail=f"Missing prediction column: {column}"
+            )
+
+    # =====================================
+    # CALCULATE METRICS
+    # =====================================
+
+    valid_df = predictions_df[
+        ["Actual_Return", "Predicted_Return"]
+    ].replace(
+        [np.inf, -np.inf],
+        np.nan
+    ).dropna()
+
+    if len(valid_df) == 0:
+
+        raise HTTPException(
+            status_code=500,
+            detail="No valid predictions available for evaluation"
         )
+
+    actual = valid_df["Actual_Return"].to_numpy()
+
+    predicted = valid_df["Predicted_Return"].to_numpy()
+
+    errors = actual - predicted
+
+    mae = float(
+        np.mean(np.abs(errors))
     )
 
-    # -------------------------------------
-    # STEP 6: RETURN API RESPONSE
-    # -------------------------------------
+    rmse = float(
+        np.sqrt(np.mean(errors ** 2))
+    )
+
+    # Pearson IC
+    if (
+        np.std(actual) > 0
+        and np.std(predicted) > 0
+    ):
+
+        information_coefficient = float(
+            np.corrcoef(actual, predicted)[0, 1]
+        )
+
+    else:
+
+        information_coefficient = None
+
+    # =====================================
+    # PREVIEW ONLY 10 PREDICTIONS
+    # =====================================
+
+    preview_df = predictions_df.head(10).copy()
+
+    # Convert Date column into JSON-safe strings
+    if "Date" in preview_df.columns:
+
+        preview_df["Date"] = (
+            preview_df["Date"].astype(str)
+        )
+
+    preview = preview_df.replace(
+        [np.inf, -np.inf],
+        np.nan
+    ).to_dict(
+        orient="records"
+    )
+
+    # =====================================
+    # API RESPONSE
+    # =====================================
 
     return {
 
@@ -212,21 +251,21 @@ def discover_alpha(
 
         "factor_expression": best_factor,
 
-        "predictions": predictions_json,
+        "metrics": {
 
-        "prediction_summary": {
+            "MAE": mae,
 
-            "total_predictions": len(
-                predictions_df
+            "RMSE": rmse,
+
+            "Information_Coefficient": (
+                information_coefficient
             ),
 
-            "columns": list(
-                predictions_df.columns
-            ),
-
-            "preview": predictions_json[:10]
+            "Total_Predictions": len(valid_df)
 
         },
+
+        "prediction_preview": preview,
 
         "output_files": {
 
