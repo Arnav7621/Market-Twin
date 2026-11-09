@@ -15,7 +15,9 @@ from app.market_twin.scenario_generator import (
     generate_scenario
 )
 from app.api.backtest import router as backtest_router
+from app.api.alpha import router as alpha_router
 
+from app.api.queue_mind import router as queue_mind_router
 
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 
@@ -237,3 +239,10 @@ def get_metrics():
 
 
 app.include_router(backtest_router)
+app.include_router(
+    alpha_router
+)
+
+app.include_router(
+    queue_mind_router
+)

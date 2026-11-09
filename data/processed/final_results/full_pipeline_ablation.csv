@@ -1,0 +1,7 @@
+Experiment,IC
+A_Baseline,0.038507082459585
+B_AlphaCompiler_Proxy,0.0351986613131475
+C_QueueMind_Proxy,0.0206305222050887
+D_MarketTwin_Proxy,0.1086842782685771
+E_Alpha_Execution_Proxy,0.0283365991082983
+F_Full_Pipeline_Proxy,0.1176032346757585
