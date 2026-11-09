@@ -1,1 +1,1 @@
-mul(sub(mul(X1, X0), sub(X0, X2)), mul(sub(X0, X2), sub(X0, sub(sub(sub(mul(X1, X0), X0), X0), X0))))
+add(mul(protected_division(X0, X3), add(X1, add(X1, 0.999))), add(mul(protected_division(X0, X3), add(X1, 0.843)), protected_division(X0, X1)))

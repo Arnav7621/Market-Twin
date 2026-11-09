@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 
@@ -10,17 +9,16 @@ def calculate_information_coefficient(
     future_returns
 ):
 
-    factor = pd.Series(
-        factor
-    )
+    factor = pd.Series(factor, dtype=float)
 
     future_returns = pd.Series(
-        future_returns
+        future_returns,
+        dtype=float
     )
 
     valid = (
-        factor.notna() &
-        future_returns.notna()
+        np.isfinite(factor) &
+        np.isfinite(future_returns)
     )
 
     factor = factor[valid]
@@ -28,7 +26,12 @@ def calculate_information_coefficient(
     future_returns = future_returns[valid]
 
     if len(factor) < 3:
+        return np.nan
 
+    if factor.nunique() < 2:
+        return np.nan
+
+    if future_returns.nunique() < 2:
         return np.nan
 
     result = spearmanr(
@@ -36,41 +39,62 @@ def calculate_information_coefficient(
         future_returns
     )
 
-    return result.statistic
+    if not np.isfinite(result.statistic):
+        return np.nan
+
+    return float(result.statistic)
 
 
 def calculate_complexity(expression):
 
-    expression = str(
-        expression
+    expression = str(expression)
+
+    operators = [
+        "add(",
+        "sub(",
+        "mul(",
+        "div(",
+        "protected_division(",
+    ]
+
+    complexity = sum(
+        expression.count(operator)
+        for operator in operators
     )
 
-    return len(
-        expression.split()
-    ) + expression.count("(")
+    return complexity
 
 
 def calculate_turnover(factor):
 
     factor = pd.Series(
-        factor
+        factor,
+        dtype=float
+    )
+
+    factor = factor.replace(
+        [np.inf, -np.inf],
+        np.nan
     ).dropna()
 
     if len(factor) < 2:
+        return np.nan
 
-        return 0.0
+    if factor.std() < 1e-12:
+        return np.nan
 
-    factor = factor / (
-        factor.abs().mean() + 1e-8
+    # Normalize factor values to comparable scale.
+    factor = (
+        factor - factor.mean()
+    ) / (
+        factor.std() + 1e-8
     )
 
     turnover = np.mean(
-        np.abs(
-            np.diff(factor)
-        )
+        np.abs(np.diff(factor))
     )
 
-    return turnover
+    return float(turnover)
 
 
 def calculate_fitness(
@@ -94,11 +118,19 @@ def calculate_fitness(
         factor
     )
 
-    fitness = (
-        ic
-        - lambda_complexity * complexity
-        - gamma_turnover * turnover
-    )
+    if not np.isfinite(ic):
+        fitness = -1.0
+
+    else:
+
+        if not np.isfinite(turnover):
+            turnover = 0.0
+
+        fitness = (
+            ic
+            - lambda_complexity * complexity
+            - gamma_turnover * turnover
+        )
 
     return {
         "IC": ic,
