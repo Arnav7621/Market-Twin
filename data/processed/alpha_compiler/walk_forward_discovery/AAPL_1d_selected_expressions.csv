@@ -1,0 +1,5 @@
+Fold,Seed,Expression
+1,202,"add(protected_division(X20, X10), add(protected_division(mul(protected_division(X17, X5), mul(X19, X21)), sub(add(-0.731, X6), add(X10, X2))), add(X8, protected_division(X2, X18))))"
+2,303,"add(protected_division(protected_division(mul(sub(X1, X8), add(X13, X20)), protected_division(sub(-0.123, X17), X21)), protected_division(sub(-0.123, X17), X21)), sub(sub(add(protected_division(X21, X20), protected_division(0.601, X16)), sub(protected_division(X21, X14), add(-0.090, protected_division(protected_division(X13, X20), add(X11, X1))))), sub(protected_division(X21, X14), protected_division(protected_division(X13, X20), add(X11, X1)))))"
+3,101,"sub(mul(sub(sub(sub(add(X9, -0.782), protected_division(X15, X9)), protected_division(X10, X10)), X9), protected_division(X7, mul(X11, X6))), protected_division(sub(mul(X3, -0.655), add(X3, X4)), protected_division(add(X7, X11), sub(X7, X1))))"
+4,202,"mul(mul(X13, sub(add(protected_division(X17, X5), X16), protected_division(X2, X18))), sub(X18, X3))"
